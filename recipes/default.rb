@@ -11,20 +11,13 @@ git node.nise_bosh.dir do
 end
 
 ruby_path = File.join(node[:nise_bosh][:ruby][:prefix_path])
-gem_path  = File.join(ruby_path. 'bin', 'gem')
-# FIX FOR CF_RELEASE
-  bosh_gems_source = "https://s3.amazonaws.com/bosh-jenkins-gems/"
-  bash "Added gems source: #{bosh_gems_source}" do
-    code <<-EOH
-    #{gem_path} source -a #{bosh_gems_source}
-    EOH
-    not_if { `#{gem_path} source`include?(bosh_gems_source) }
-  end
-# 
-
+gem_path  = File.join(ruby_path, 'bin', 'gem')
 gem_package "bosh_cli" do
   gem_binary gem_path
-  version "~> 1.5.0"
+  source "https://s3.amazonaws.com/bosh-jenkins-gems/"
+  # source "https://s3.amazonaws.com/bosh-jenkins-gems/gems/bosh_cli-1.5.0.pre.694.gem"
+  version "~> 1.5.0.pre"
+  # options "--pre"
 end
 
 
