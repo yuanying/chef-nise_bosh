@@ -43,17 +43,21 @@ bash "Create relase" do
   not_if { ::File.exist?("#{node.nise_bosh.release.dir}/releases/#{node.nise_bosh.release.version}.tgz") }
 end
 
-if node[:nise_bosh][:deploy][:job]
+if node[:nise_bosh][:deploy][:jobs]
   manifest_path = "/tmp/deploy-manifest.yml"
   require 'yaml'
   file manifest_path do
     content node.nise_bosh.deploy.manifest.to_yaml.split("\n").map{|line| line.gsub(/\!ruby\/.*$/, '')}.join("\n")
   end
 
-  bash "Deploy... with Nise-BOSH" do
-    cwd node.nise_bosh.dir
-    code <<-EOH
-    #{bundle_path} exec #{ruby_path}/bin/ruby ./bin/nise-bosh -y #{node.nise_bosh.release.dir} #{manifest_path} #{node.nise_bosh.deploy.job}
-    EOH
+  node[:nise_bosh][:deploy][:jobs].each do |job|
+    keep_monit_files = ''
+    bash "Deploy '#{job}' with Nise-BOSH" do
+      cwd node.nise_bosh.dir
+      code <<-EOH
+      #{bundle_path} exec #{ruby_path}/bin/ruby ./bin/nise-bosh #{keep_monit_files} -y #{node.nise_bosh.release.dir} #{manifest_path} #{job}
+      EOH
+    end
+    keep_monit_files = '--keep-monit-files'
   end
 end
