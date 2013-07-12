@@ -18,6 +18,23 @@ bash "Bundle install for Nise-BOSH" do
   EOH
 end
 
+bash "Init Nise-BOSH environment" do
+  code <<-EOH
+  # stemcell_builder/stages/bosh_users/apply.sh
+  if [ `cat /etc/passwd | cut -f1 -d ":" | grep "^vcap$" -c` -eq 0 ]; then
+      addgroup --system admin
+      adduser --disabled-password --gecos Ubuntu vcap
+
+      for grp in admin adm audio cdrom dialout floppy video plugdev dip
+      do
+          adduser vcap $grp
+      done
+  else
+      echo "User vcap exists already, skippking adduser..."
+  fi
+  EOH
+end
+
 bash "Create relase" do
   cwd node.nise_bosh.release.dir
   code <<-EOH
@@ -29,14 +46,14 @@ end
 if node[:nise_bosh][:deploy][:job]
   manifest_path = "/tmp/deploy-manifest.yml"
   require 'yaml'
-  cookbook_file manifest_path do
-    content node.nise_bosh.deploy.manifest.to_yaml
+  file manifest_path do
+    content node.nise_bosh.deploy.manifest.to_yaml.split("\n").map{|line| line.gsub(/\!ruby\/.*$/, '')}.join("\n")
   end
 
   bash "Deploy... with Nise-BOSH" do
     cwd node.nise_bosh.dir
     code <<-EOH
-    #{bundle_path} exec ./bin/nise-bosh -y #{node.nise_bosh.release.dir} #{manifest_path} #{node.nise_bosh.deploy.job}
+    #{bundle_path} exec #{ruby_path}/bin/ruby ./bin/nise-bosh -y #{node.nise_bosh.release.dir} #{manifest_path} #{node.nise_bosh.deploy.job}
     EOH
   end
 end
