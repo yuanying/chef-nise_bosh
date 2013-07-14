@@ -20,6 +20,13 @@ end
 
 bash "Init Nise-BOSH environment" do
   code <<-EOH
+  # stemcell_builder/stages/bosh_monit/apply.sh
+  DEBIAN_FRONTEND=noninteractive apt-get install -f -y --force-yes --no-install-recommends runit
+
+  # installed somewhere else
+  DEBIAN_FRONTEND=noninteractive apt-get install -f -y --force-yes --no-install-recommends \
+  gettext
+
   # stemcell_builder/stages/bosh_users/apply.sh
   if [ `cat /etc/passwd | cut -f1 -d ":" | grep "^vcap$" -c` -eq 0 ]; then
       addgroup --system admin
