@@ -38,7 +38,7 @@ end
 bash "Create relase" do
   cwd node.nise_bosh.release.dir
   code <<-EOH
-  #{bosh_path} create release #{node.nise_bosh.release.dir}/releases/#{node.nise_bosh.release.version}
+  #{bosh_path} create release #{node.nise_bosh.release.dir}/releases/#{node.nise_bosh.release.version}.yml
   EOH
   not_if { ::File.exist?("#{node.nise_bosh.release.dir}/releases/#{node.nise_bosh.release.version}.tgz") }
 end
