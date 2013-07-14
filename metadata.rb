@@ -11,3 +11,6 @@ recipe            "nise_bosh", "Install Nise-BOSH."
   supports os
 end
 
+%w{ monit }.each do |cb|
+  depends cb
+end
