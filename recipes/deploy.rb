@@ -1,3 +1,4 @@
+include_recipe "monit"
 include_recipe "nise_bosh"
 
 ruby_path   = File.join(node[:nise_bosh][:ruby][:prefix_path])
@@ -66,5 +67,23 @@ if node[:nise_bosh][:deploy][:jobs]
       EOH
     end
     keep_monit_files = '--keep-monit-files'
+  end
+
+  # Delete old monitrc link.
+  Dir['/etc/monit/conf.d/*.monitrc.conf'].each do |old_link|
+    link old_link do
+      action :delete
+      only_if "test -L #{old_link}"
+      notifies :restart, resources(:service => "monit"), :delayed
+    end
+  end
+
+  # Create monitrc link
+  Dir['/var/vcap/monit/*.monitrc', '/var/vcap/monit/job/*.monitrc'].each do |new_link|
+    base_name = File.basename(new_link)
+    link "/etc/monit/conf.d/#{base_name}.conf" do
+      to new_link
+      notifies :restart, resources(:service => "monit"), :delayed
+    end
   end
 end
